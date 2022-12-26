@@ -41,19 +41,23 @@ $ terraform -chdir=terraform apply
 
 - `/list`
   - Returns all lambda functions on the AWS account where the app is hosted.
-- `/list?runtime=:x`
-  - Returns all lambda functions on the AWS account which are based on the ':x' runtime
+- `/list?runtime=:a`
+  - Returns all lambda functions on the AWS account which are based on the ':a' runtime
+- `/search?tags=:a=:b;:c=:d`
+  - Returns all lambda functions on the AWS account based on tags (can be combined with ?region)
+- `/search?region=:a`
+  - Returns all lambda functions on the AWS account based on region (can be combined with ?tags)
 
 ## Planned improvements:
 
 - Split "list all" endpoint and "filter" endpoints (with two seperate functions for these endpoints)
-- Use more parameters on Terraform modules to create the lambdas easily
-- Add filtering by tags ([resource explorer doc](https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/clients/client-resource-explorer-2/index.html))
-- Add filtering by region
+- ~~Use more parameters on Terraform modules to create the lambdas easily~~
+- ~~Add filtering by tags ([resource explorer doc](https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/clients/client-resource-explorer-2/index.html))~~
+- ~~Add filtering by region~~
 - Standardize values returned by all filters (if distinct APIs were used to make the filters)
 - Split filtering between multiple lambda functions if needed
 - If those multiple lambda functions have common dependencies, use lambda layers
-- Have a CI/CD pipeline that deploys
+- ~~Have a CI/CD pipeline that deploys~~
 - Unit tests (ran by the CI/CD pipeline)
 - Endpoint tests on API URL returned by terraform (ran by the CI/CD pipeline)
 - Create an OpenAPI doc to be mapped to the terraform API gateway
