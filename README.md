@@ -40,7 +40,7 @@ $ terraform -chdir=terraform apply
 ## Available endpoints
 
 - `/list`
-  - Returns all lambda functions on the AWS account where the function is hosted.
+  - Returns all lambda functions on the AWS account where the app is hosted.
 - `/list?runtime=:x`
   - Returns all lambda functions on the AWS account which are based on the ':x' runtime
 
