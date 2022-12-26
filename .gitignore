@@ -1,0 +1,4 @@
+build
+build.zip
+.terraform
+node_modules
