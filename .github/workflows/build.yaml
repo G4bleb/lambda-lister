@@ -6,22 +6,15 @@ on:
       - main
 
 jobs:
-  setup:
+  builder-job:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3.2.0
       - uses: actions/setup-node@v3.5.1
         with:
           node-version: "lts/gallium"
-      - name: Yarn install
-        run: yarn install
-      - name: Yarn build
-        run: yarn build
-  build-lister:
-    needs: [setup]
-    steps:
-      - name: Setup and run tests
-        working-directory: ./lambdas/lister
+      - name: build
+        working-directory: lambdas/lister
         run: |
           yarn
           yarn build
