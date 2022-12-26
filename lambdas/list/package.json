@@ -1,0 +1,24 @@
+{
+  "name": "lister",
+  "version": "1.0.0",
+  "description": "AWS lambda to list all functions created in an AWS account",
+  "main": "index.js",
+  "repository": "https://github.com/g4bleb/lambda-lister",
+  "author": "Gabriel Lebis",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.109",
+    "eslint": "^8.30.0",
+    "prettier": "^2.8.1",
+    "typescript": "^4.9.4"
+  },
+  "dependencies": {
+    "@aws-sdk/client-lambda": "^3.238.0"
+  },
+  "scripts": {
+    "build:compile": "tsc && cp package.json build && cp yarn.lock build && cd build && yarn --production --frozen-lockfile",
+    "build:add-deps": "cp package.json build && cp yarn.lock build && cd build && yarn --production --frozen-lockfile",
+    "build:package": "cd build && zip -rq ../build.zip .",
+    "build": "yarn build:compile && yarn build:add-deps && yarn build:package"
+  }
+}

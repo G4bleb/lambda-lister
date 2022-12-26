@@ -13,8 +13,13 @@ jobs:
       - uses: actions/setup-node@v3.5.1
         with:
           node-version: "lts/gallium"
-      - name: build
-        working-directory: lambdas/lister
+      - name: build list
+        working-directory: lambdas/list
+        run: |
+          yarn
+          yarn build
+      - name: build search
+        working-directory: lambdas/search
         run: |
           yarn
           yarn build

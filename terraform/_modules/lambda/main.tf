@@ -1,9 +1,8 @@
 locals {
-  build_path = "${path.root}/../lambdas/lister/build.zip"
+  name = "${var.project_name}-${var.function_name}"
 }
-
 resource "aws_iam_role" "iam_for_lambda" {
-  name = "lambda-lister-lister-iam"
+  name = "${local.name}-iam"
 
   assume_role_policy = <<EOF
 {
@@ -27,37 +26,25 @@ resource "aws_iam_role_policy_attachment" "attach_basicrole" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-resource "aws_iam_policy" "lambda_lister_policy" {
-  name   = "lambda-lister-policy"
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "ListLambdaFunctions",
-      "Effect": "Allow",
-      "Action": "lambda:ListFunctions",
-      "Resource": "*"
-    }
-  ]
-}
-EOF
+resource "aws_iam_policy" "policy_for_lambda" {
+  name   = "${local.name}-policy"
+  policy = var.additional_policy
 }
 
-resource "aws_iam_role_policy_attachment" "lambda_lister_policy" {
+resource "aws_iam_role_policy_attachment" "attach_role_policy" {
   role       = aws_iam_role.iam_for_lambda.name
-  policy_arn = aws_iam_policy.lambda_lister_policy.arn
+  policy_arn = aws_iam_policy.policy_for_lambda.arn
 }
 
 resource "aws_lambda_function" "func" {
-  function_name = "lambda-lister-lister"
+  function_name = local.name
 
-  filename = local.build_path
+  filename = var.build_path
 
   runtime = "nodejs16.x"
   handler = "index.handler"
 
-  source_code_hash = filebase64sha256(local.build_path)
+  source_code_hash = filebase64sha256(var.build_path)
 
   role = aws_iam_role.iam_for_lambda.arn
 }
