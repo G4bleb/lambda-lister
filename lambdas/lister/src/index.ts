@@ -12,8 +12,11 @@ const command = new ListFunctionsCommand({});
 export const handler = async (
   event: APIGatewayProxyEventV2
 ): Promise<APIGatewayProxyResultV2> => {
-  const filterName = event.queryStringParameters?.["filterName"];
-  const filterValue = event.queryStringParameters?.["filterValue"];
+  const filters = {
+    runtime: event.queryStringParameters?.["runtime"],
+    tags: event.queryStringParameters?.["tags"],
+    region: event.queryStringParameters?.["region"],
+  };
 
   let awsResponse: ListFunctionsCommandOutput;
   try {
@@ -25,12 +28,16 @@ export const handler = async (
     };
   }
 
-  let responseBody: FunctionConfiguration[];
+  let responseBody: FunctionConfiguration[] = awsResponse.Functions ?? [];
   try {
-    if (filterName && filterValue) {
-      responseBody = filter(awsResponse.Functions, filterName, filterValue);
-    } else {
-      responseBody = awsResponse.Functions ?? [];
+    for (const key in filters) {
+      const filter = key as keyof typeof filters;
+      const value = filters[filter];
+      if (value) {
+        responseBody = doFiltering(responseBody, filter, value);
+      } else {
+        responseBody = responseBody ?? [];
+      }
     }
   } catch (_) {
     return {
@@ -47,7 +54,7 @@ export const handler = async (
   };
 };
 
-function filter(
+function doFiltering(
   functions: FunctionConfiguration[] | undefined,
   filterName: string,
   filterValue: string
