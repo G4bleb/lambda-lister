@@ -46,11 +46,12 @@ $ terraform -chdir=terraform apply
 
 ## Planned improvements:
 
-- Split "list all" endpoint and "filter" endpoints
+- Split "list all" endpoint and "filter" endpoints (with two seperate functions for these endpoints)
+- Use more parameters on Terraform modules to create the lambdas easily
 - Add filtering by tags ([resource explorer doc](https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/clients/client-resource-explorer-2/index.html))
 - Add filtering by region
 - Standardize values returned by all filters (if distinct APIs were used to make the filters)
-- Split filtering between multiple lambda functions
+- Split filtering between multiple lambda functions if needed
 - If those multiple lambda functions have common dependencies, use lambda layers
 - Have a CI/CD pipeline that deploys
 - Unit tests (ran by the CI/CD pipeline)
