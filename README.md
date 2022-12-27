@@ -59,7 +59,8 @@ $ terraform -chdir=terraform apply
 - If those multiple lambda functions have common dependencies, use lambda layers
 - ~~Have a CI/CD pipeline that deploys~~
 - ~~Unit tests (successes and errors) (ran by the CI/CD pipeline)~~
-- Endpoint tests on API URL returned by terraform (ran by the CI/CD pipeline)
+- ~~Endpoint tests on API URL returned by terraform (ran by the CI/CD pipeline)~~
+- split CI/CD pipeline jobs between testing/building/deploying
 - Create an OpenAPI doc to be mapped to the terraform API gateway
 - Handle pagination
 - Consider having abstraction between the runtime environment and the aws account queried
