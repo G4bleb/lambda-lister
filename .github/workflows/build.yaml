@@ -36,6 +36,6 @@ jobs:
           terraform apply -auto-approve
       - name: test endpoints
         run: |
-          API_URL=$(terraform output -raw api_url)
+          API_URL="$(terraform output -raw api_url)"
           curl "$API_URL/list"
           curl "$env.API_URL/search?region=us-east-1"
