@@ -37,6 +37,6 @@ jobs:
           terraform output -json
       - name: test endpoints
         run: |
-          export API_URL=$(terraform output -raw api_url) && \
-          curl $API_URL/list && \
-          curl $API_URL/search?region=us-east-1
+          export API_URL=$(terraform output -raw api_url)
+          curl "$API_URL/list"
+          curl "$API_URL/search?region=us-east-1"
