@@ -34,8 +34,9 @@ jobs:
         run: |
           terraform init
           terraform apply -auto-approve
-      - name: test endpoints
+          echo "API_URL=$(terraform-bin output -raw api_url)" >> $GITHUB_ENV
+      - name: Test endpoints
         run: |
           API_URL=$(terraform-bin output -raw api_url)
-          curl "$API_URL/list"
-          curl "$API_URL/search?region=us-east-1"
+          curl "${{env.API_URL}}/list"
+          curl "${{env.API_URL}}/search?region=us-east-1"
