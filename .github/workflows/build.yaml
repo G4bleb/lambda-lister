@@ -37,6 +37,5 @@ jobs:
           echo "API_URL=$(terraform-bin output -raw api_url)" >> $GITHUB_ENV
       - name: Test endpoints
         run: |
-          API_URL=$(terraform-bin output -raw api_url)
           curl "${{env.API_URL}}/list"
           curl "${{env.API_URL}}/search?region=us-east-1"
