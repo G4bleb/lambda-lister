@@ -17,11 +17,13 @@ jobs:
         working-directory: lambdas/list
         run: |
           yarn
+          yarn test
           yarn build
       - name: build search
         working-directory: lambdas/search
         run: |
           yarn
+          yarn test
           yarn build
       - uses: hashicorp/setup-terraform@v2.0.3
       - name: deploy

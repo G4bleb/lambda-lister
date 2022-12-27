@@ -18,6 +18,7 @@ export const handler = async (
     region: event.queryStringParameters?.["region"],
   };
 
+  //Get all lambdas first
   let awsResponse: ListFunctionsCommandOutput;
   try {
     awsResponse = await client.send(command);
@@ -28,6 +29,7 @@ export const handler = async (
     };
   }
 
+  //Filter the body through all filters
   let responseBody: FunctionConfiguration[] = awsResponse.Functions ?? [];
   try {
     for (const key in filters) {
@@ -39,9 +41,13 @@ export const handler = async (
         responseBody = responseBody ?? [];
       }
     }
-  } catch (_) {
+  } catch (error) {
     return {
       statusCode: 400,
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+      },
+      body: (error as Error).message,
     };
   }
 

@@ -15,6 +15,7 @@ export const handler = async (
     region: event.queryStringParameters?.["region"],
   };
 
+  //Querystring will be extended with requested filters
   let querystring = "resourcetype:lambda:function";
 
   try {
@@ -25,9 +26,13 @@ export const handler = async (
         querystring = addFilteringToQueryString(querystring, filter, value);
       }
     }
-  } catch (_) {
+  } catch (error) {
     return {
       statusCode: 400,
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+      },
+      body: (error as Error).message,
     };
   }
 
@@ -67,7 +72,9 @@ function addFilteringToQueryString(
   }
   switch (filterName) {
     case "tags":
-      const tagpairs = filterValue.replace(/;$/, "").split(";");
+      const tagpairs = decodeURIComponent(filterValue)
+        .replace(/;$/, "")
+        .split(";");
       for (const pair of tagpairs) {
         querystring += ` tag:${pair}`;
       }

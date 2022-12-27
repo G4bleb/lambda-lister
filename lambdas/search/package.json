@@ -7,9 +7,12 @@
   "author": "Gabriel Lebis",
   "license": "MIT",
   "devDependencies": {
+    "@jest/globals": "^29.3.1",
     "@types/aws-lambda": "^8.10.109",
     "eslint": "^8.30.0",
+    "jest": "^29.3.1",
     "prettier": "^2.8.1",
+    "ts-jest": "^29.0.3",
     "typescript": "^4.9.4"
   },
   "dependencies": {
@@ -19,6 +22,7 @@
     "build:compile": "tsc && cp package.json build && cp yarn.lock build && cd build && yarn --production --frozen-lockfile",
     "build:add-deps": "cp package.json build && cp yarn.lock build && cd build && yarn --production --frozen-lockfile",
     "build:package": "cd build && zip -rq ../build.zip .",
-    "build": "yarn build:compile && yarn build:add-deps && yarn build:package"
+    "build": "yarn build:compile && yarn build:add-deps && yarn build:package",
+    "test": "jest"
   }
 }
