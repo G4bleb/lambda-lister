@@ -37,8 +37,6 @@ export const handler = async (
       const value = filters[filter];
       if (value) {
         responseBody = doFiltering(responseBody, filter, value);
-      } else {
-        responseBody = responseBody ?? [];
       }
     }
   } catch (error) {

@@ -68,7 +68,7 @@ function addFilteringToQueryString(
     return querystring;
   }
   if (filterValue.includes(" ")) {
-    throw new Error("Illegal char filters");
+    throw new Error("Illegal char in filters");
   }
   switch (filterName) {
     case "tags":

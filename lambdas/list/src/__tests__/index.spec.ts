@@ -1,7 +1,3 @@
-import { describe, expect, test, jest } from "@jest/globals";
-import { APIGatewayProxyEventV2 } from "aws-lambda";
-import { handler } from "../index";
-
 const mockLambda = {
   FunctionName: "lambda-foo",
   Runtime: "nodejs16.x",
@@ -15,13 +11,19 @@ const mockLambdas = [
   },
 ];
 
+const mockSend = jest.fn(async () => ({
+  Functions: mockLambdas,
+}));
+
+import { describe, expect, test, jest } from "@jest/globals";
+import { APIGatewayProxyEventV2 } from "aws-lambda";
+import { handler } from "../index";
+
 jest.mock(
   "@aws-sdk/client-lambda",
   jest.fn(() => ({
     LambdaClient: jest.fn(() => ({
-      send: async () => ({
-        Functions: mockLambdas,
-      }),
+      send: mockSend,
     })),
     ListFunctionsCommand: jest.fn(() => ({})),
   }))
@@ -45,6 +47,18 @@ describe("list lambdas", () => {
       statusCode: 200,
       headers: { "Content-Type": "application/json; charset=utf-8" },
       body: JSON.stringify([mockLambda]),
+    });
+  });
+});
+
+describe("failures", () => {
+  test("aws request fails", async () => {
+    jest.spyOn(console, "error").mockImplementationOnce(() => {});
+    mockSend.mockRejectedValueOnce(new Error("Mock Error"));
+    const res = await handler({} as APIGatewayProxyEventV2);
+
+    expect(res).toEqual({
+      statusCode: 500,
     });
   });
 });
