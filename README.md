@@ -28,14 +28,15 @@ $ yarn --cwd lambdas/lister build
      - In backend "s3": `region` (default `"us-east-1"`)
 
 2. In [terraform/main.tf](./terraform/main.tf), set the `region` field from provider `aws` for your use. Default value is `"us-east-1"`
-3.
+3. Enable resource explorer on your AWS account https://resource-explorer.console.aws.amazon.com/resource-explorer/home#/
+4.
 
 ```
 $ terraform -chdir=terraform init
 $ terraform -chdir=terraform apply
 ```
 
-4. Terraform outputs the URL of your API. Enjoy
+5. Terraform outputs the URL of your API. Enjoy
 
 ## Available endpoints
 
