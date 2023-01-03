@@ -1,7 +1,7 @@
 {
-  "name": "lister",
+  "name": "list",
   "version": "1.0.0",
-  "description": "AWS lambda to list all functions created in an AWS account",
+  "description": "AWS lambda to list functions created in an AWS account",
   "main": "index.js",
   "repository": "https://github.com/g4bleb/lambda-lister",
   "author": "Gabriel Lebis",
