@@ -12,13 +12,7 @@ const command = new ListFunctionsCommand({});
 export const handler = async (
   event: APIGatewayProxyEventV2
 ): Promise<APIGatewayProxyResultV2> => {
-  const filters = {
-    runtime: event.queryStringParameters?.["runtime"],
-    tags: event.queryStringParameters?.["tags"],
-    region: event.queryStringParameters?.["region"],
-  };
-
-  //Get all lambdas first
+  //Get all lambdas
   let awsResponse: ListFunctionsCommandOutput;
   try {
     awsResponse = await client.send(command);
@@ -28,26 +22,7 @@ export const handler = async (
       statusCode: 500,
     };
   }
-
-  //Filter the body through all filters
-  let responseBody: FunctionConfiguration[] = awsResponse.Functions ?? [];
-  try {
-    for (const key in filters) {
-      const filter = key as keyof typeof filters;
-      const value = filters[filter];
-      if (value) {
-        responseBody = doFiltering(responseBody, filter, value);
-      }
-    }
-  } catch (error) {
-    return {
-      statusCode: 400,
-      headers: {
-        "Content-Type": "text/plain; charset=utf-8",
-      },
-      body: (error as Error).message,
-    };
-  }
+  const responseBody: FunctionConfiguration[] = awsResponse.Functions ?? [];
 
   return {
     statusCode: 200,
@@ -57,24 +32,3 @@ export const handler = async (
     body: JSON.stringify(responseBody),
   };
 };
-
-function doFiltering(
-  functions: FunctionConfiguration[] | undefined,
-  filterName: string,
-  filterValue: string
-): FunctionConfiguration[] {
-  if (!functions) {
-    return [];
-  }
-  switch (filterName) {
-    case "runtime":
-      return functions.filter((f) => f.Runtime === filterValue);
-    case "tags":
-      break;
-    case "region":
-      break;
-    default:
-      throw new Error("Specified filter is unknown.");
-  }
-  return functions;
-}

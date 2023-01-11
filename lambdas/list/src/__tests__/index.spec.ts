@@ -1,10 +1,8 @@
-const mockLambda = {
-  FunctionName: "lambda-foo",
-  Runtime: "nodejs16.x",
-};
-
 const mockLambdas = [
-  mockLambda,
+  {
+    FunctionName: "lambda-foo",
+    Runtime: "nodejs16.x",
+  },
   {
     FunctionName: "lambda-bar",
     Runtime: "nodejs14.x",
@@ -25,28 +23,17 @@ jest.mock(
     LambdaClient: jest.fn(() => ({
       send: mockSend,
     })),
-    ListFunctionsCommand: jest.fn(() => ({})),
+    ListFunctionsCommand: jest.fn((param) => ({ input: param })),
   }))
 );
 
-describe("list lambdas", () => {
-  test("all", async () => {
+describe("successes", () => {
+  test("list lambdas", async () => {
     const res = await handler({} as APIGatewayProxyEventV2);
     expect(res).toEqual({
       statusCode: 200,
       headers: { "Content-Type": "application/json; charset=utf-8" },
       body: JSON.stringify(mockLambdas),
-    });
-  });
-
-  test("runtime filter", async () => {
-    const res = await handler({
-      queryStringParameters: { runtime: "nodejs16.x" },
-    } as unknown as APIGatewayProxyEventV2);
-    expect(res).toEqual({
-      statusCode: 200,
-      headers: { "Content-Type": "application/json; charset=utf-8" },
-      body: JSON.stringify([mockLambda]),
     });
   });
 });
