@@ -42,16 +42,18 @@ $ terraform -chdir=terraform apply
 
 - `/list`
   - Returns all lambda functions on the AWS account where the app is hosted.
-- `/list?runtime=:a`
-  - Returns all lambda functions on the AWS account which are based on the ':a' runtime
-- `/search?tags=:a=:b;:c=:d`
-  - Returns all lambda functions on the AWS account based on tags (can be combined with ?region)
-- `/search?region=:a`
-  - Returns all lambda functions on the AWS account based on region (can be combined with ?tags)
+- `/search?runtime=:a`
+  - Allows searching through the lambdas using the following filters (they can be combined):
+  - `/search?runtime=:a`
+    - Returns all lambda functions on the AWS account which are based on the ':a' runtime
+  - `/search?tags=:a=:b;:c=`
+    - Returns all lambda functions on the AWS account based on tags
+  - `/search?region=:a`
+    - Returns all lambda functions on the AWS account based on region
 
 ## Planned improvements:
 
-- Split "list all" endpoint and "filter" endpoints (with two seperate functions for these endpoints)
+- ~~Split "list all" endpoint and "filter" endpoints (with two seperate functions for these endpoints)~~
 - ~~Use more parameters on Terraform modules to create the lambdas easily~~
 - ~~Add filtering by tags ([resource explorer doc](https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/clients/client-resource-explorer-2/index.html))~~
 - ~~Add filtering by region~~
