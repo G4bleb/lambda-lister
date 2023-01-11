@@ -53,9 +53,12 @@ module "lambda_search" {
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "SearchResourceExplorer",
+      "Sid": "ListLambdaFunctionsAndTheirTags",
       "Effect": "Allow",
-      "Action": "resource-explorer-2:Search",
+      "Action": [
+          "lambda:ListFunctions",
+          "lambda:ListTags"
+      ],
       "Resource": "*"
     }
   ]
