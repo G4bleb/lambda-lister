@@ -1,29 +1,55 @@
 import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from "aws-lambda";
 import {
-  ResourceExplorer2Client,
-  SearchCommand,
-  SearchCommandOutput,
-} from "@aws-sdk/client-resource-explorer-2";
+  FunctionConfiguration,
+  LambdaClient,
+  ListFunctionsCommand,
+  ListFunctionsCommandOutput,
+  ListTagsCommand,
+} from "@aws-sdk/client-lambda";
+import { LambdaFunctionData } from "./types";
+import { compareTags } from "./utils";
 
-const client = new ResourceExplorer2Client({});
+enum Filter {
+  Runtime = "runtime",
+  Tags = "tags",
+  Region = "region",
+}
 
-export const handler = async (
+const client = new LambdaClient({});
+const command = new ListFunctionsCommand({});
+
+export async function handler(
   event: APIGatewayProxyEventV2
-): Promise<APIGatewayProxyResultV2> => {
+): Promise<APIGatewayProxyResultV2> {
   const filters = {
-    tags: event.queryStringParameters?.["tags"],
-    region: event.queryStringParameters?.["region"],
+    [Filter.Runtime]: event.queryStringParameters?.["runtime"],
+    [Filter.Tags]: event.queryStringParameters?.["tags"],
+    [Filter.Region]: event.queryStringParameters?.["region"],
   };
 
-  //Querystring will be extended with requested filters
-  let querystring = "resourcetype:lambda:function";
+  //Get all lambdas first
+  let awsResponse: ListFunctionsCommandOutput;
+  try {
+    awsResponse = await client.send(command);
+  } catch (error) {
+    console.error(error);
+    return {
+      statusCode: 500,
+    };
+  }
 
+  let responseBody: LambdaFunctionData[] = awsResponse.Functions ?? [];
+  const tagFetchers = fetchTags(responseBody);
+  extractRegions(responseBody);
+  await tagFetchers;
+
+  //Filter the body through all filters
   try {
     for (const key in filters) {
       const filter = key as keyof typeof filters;
       const value = filters[filter];
       if (value) {
-        querystring = addFilteringToQueryString(querystring, filter, value);
+        responseBody = doFiltering(responseBody, filter, value);
       }
     }
   } catch (error) {
@@ -36,54 +62,65 @@ export const handler = async (
     };
   }
 
-  const command = new SearchCommand({
-    QueryString: querystring,
-  });
-
-  let awsResponse: SearchCommandOutput;
-  try {
-    awsResponse = await client.send(command);
-  } catch (error) {
-    console.error(error);
-    return {
-      statusCode: 500,
-    };
-  }
-
   return {
     statusCode: 200,
     headers: {
       "Content-Type": "application/json; charset=utf-8",
     },
-    body: JSON.stringify(awsResponse.Resources),
+    body: JSON.stringify(responseBody),
   };
-};
+}
 
-function addFilteringToQueryString(
-  querystring: string,
-  filterName: string,
-  filterValue: string
-): string {
-  if (!filterName) {
-    return querystring;
+function fetchTags(lambdas: LambdaFunctionData[]): Promise<void[]> {
+  const tagFetchers: Promise<void>[] = [];
+  for (const lambda of lambdas) {
+    const tagCommand = new ListTagsCommand({ Resource: lambda.FunctionArn });
+    tagFetchers.push(
+      client.send(tagCommand).then((res) => {
+        lambda.tags = res.Tags;
+      })
+    );
   }
-  if (filterValue.includes(" ")) {
-    throw new Error("Illegal char in filters");
+  return Promise.all(tagFetchers);
+}
+
+function extractRegions(lambdas: LambdaFunctionData[]): void {
+  for (const lambda of lambdas) {
+    const arn = lambda.FunctionArn;
+    if (!arn) {
+      console.error("missing ARN of function " + JSON.stringify(lambda));
+    } else {
+      lambda.region = arn.split(":")[3];
+    }
+  }
+}
+
+function doFiltering(
+  functions: LambdaFunctionData[],
+  filterName: Filter,
+  filterValue: string
+): FunctionConfiguration[] {
+  if (!functions) {
+    return [];
   }
   switch (filterName) {
-    case "tags":
-      const tagpairs = decodeURIComponent(filterValue)
-        .replace(/;$/, "")
+    case Filter.Runtime:
+      return functions.filter((f) => f.Runtime === filterValue);
+    case Filter.Tags:
+      const splitTagPairs = decodeURIComponent(filterValue)
+        .replace(/;$/, "") //Remove trailing ;
         .split(";");
-      for (const pair of tagpairs) {
-        querystring += ` tag:${pair}`;
+
+      const tagPairs: Record<string, string> = {};
+      for (const pair of splitTagPairs) {
+        const [name, val] = pair.split("=");
+        tagPairs[name] = val;
       }
-      break;
-    case "region":
-      querystring += ` region:${filterValue}`;
-      break;
+
+      return functions.filter((f) => f.tags && compareTags(f.tags, tagPairs));
+    case Filter.Region:
+      return functions.filter((f) => f.region === filterValue);
     default:
       throw new Error("Specified filter is unknown.");
   }
-  return querystring;
 }

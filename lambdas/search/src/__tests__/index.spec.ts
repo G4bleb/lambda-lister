@@ -1,43 +1,71 @@
-const mockSend = jest.fn(async () => ({
-  Resources: mockLambdas,
-}));
-const mockSearch = jest.fn(() => ({}));
-
-const mockLambda = {
-  Arn: "arn:aws:lambda:us-east-1:123456:function:lambda-foo",
-  Region: "us-east-1",
-  ResourceType: "lambda:function",
-  Service: "lambda",
+const mockLambdaFoo = {
+  FunctionName: "lambda-foo",
+  FunctionArn: "arn:aws:lambda:us-east-1:533456499033:function:lambda-foo",
+  Runtime: "nodejs16.x",
 };
+const expectedFoo = Object.assign({}, mockLambdaFoo, {
+  region: "us-east-1",
+  tags: { foo: "bar", baz: "" },
+});
+const mockLambdaBar = {
+  FunctionName: "lambda-bar",
+  FunctionArn: "arn:aws:lambda:us-west-1:533456499033:function:lambda-bar",
+  Runtime: "nodejs14.x",
+};
+const expectedBar = Object.assign({}, mockLambdaFoo, {
+  region: "us-west-1",
+  tags: {},
+});
 
-const mockLambdas = [
-  mockLambda,
-  {
-    Arn: "arn:aws:lambda:us-east-1:123456:function:lambda-bar",
-    Region: "us-east-1",
-    ResourceType: "lambda:function",
-    Service: "lambda",
-  },
-];
+const mockLambdas = [mockLambdaFoo, mockLambdaBar];
+
+interface ListTagsCommand {
+  input: {
+    Resource: string;
+  };
+}
+interface ListFunctionsCommand {
+  input: {};
+}
+
+const mockSend = jest.fn(
+  async (param: ListTagsCommand | ListFunctionsCommand) => {
+    if ("Resource" in param.input) {
+      switch (param.input.Resource) {
+        case mockLambdaFoo.FunctionArn:
+          return { Tags: expectedFoo.tags };
+        case mockLambdaBar.FunctionArn:
+          return { Tags: expectedBar.tags };
+        default:
+          throw Error("Unexpected params given to mockSend");
+      }
+    } else {
+      //param instanceof ListFunctionsCommand
+      return {
+        Functions: mockLambdas,
+      };
+    }
+  }
+);
 
 import { describe, expect, test, jest } from "@jest/globals";
 import { APIGatewayProxyEventV2 } from "aws-lambda";
 import { handler } from "../index";
 
-jest.mock("@aws-sdk/client-resource-explorer-2", () => ({
-  ResourceExplorer2Client: jest.fn(() => ({
-    send: mockSend,
-  })),
-  SearchCommand: mockSearch,
-}));
+jest.mock(
+  "@aws-sdk/client-lambda",
+  jest.fn(() => ({
+    LambdaClient: jest.fn(() => ({
+      send: mockSend,
+    })),
+    ListFunctionsCommand: jest.fn((param) => ({ input: param })),
+    ListTagsCommand: jest.fn((param) => ({ input: param })),
+  }))
+);
 
-describe("list lambdas", () => {
+describe("successes", () => {
   test("all", async () => {
     const res = await handler({} as APIGatewayProxyEventV2);
-    expect(mockSearch).toHaveBeenCalledWith({
-      QueryString: "resourcetype:lambda:function",
-    });
-
     expect(res).toEqual({
       statusCode: 200,
       headers: { "Content-Type": "application/json; charset=utf-8" },
@@ -45,18 +73,25 @@ describe("list lambdas", () => {
     });
   });
 
-  test("region filter", async () => {
+  test("runtime filter", async () => {
     const res = await handler({
-      queryStringParameters: { region: "us-west-1" },
+      queryStringParameters: { runtime: "nodejs16.x" },
     } as unknown as APIGatewayProxyEventV2);
-    expect(mockSearch).toHaveBeenCalledWith({
-      QueryString: "resourcetype:lambda:function region:us-west-1",
-    });
-
     expect(res).toEqual({
       statusCode: 200,
       headers: { "Content-Type": "application/json; charset=utf-8" },
-      body: JSON.stringify(mockLambdas),
+      body: JSON.stringify([expectedFoo]),
+    });
+  });
+
+  test("region filter", async () => {
+    const res = await handler({
+      queryStringParameters: { region: "us-east-1" },
+    } as unknown as APIGatewayProxyEventV2);
+    expect(res).toEqual({
+      statusCode: 200,
+      headers: { "Content-Type": "application/json; charset=utf-8" },
+      body: JSON.stringify([expectedFoo]),
     });
   });
 
@@ -64,15 +99,10 @@ describe("list lambdas", () => {
     const res = await handler({
       queryStringParameters: { tags: "foo%3Dbar;baz%3D" },
     } as unknown as APIGatewayProxyEventV2);
-
-    expect(mockSearch).toHaveBeenCalledWith({
-      QueryString: "resourcetype:lambda:function tag:foo=bar tag:baz=",
-    });
-
     expect(res).toEqual({
       statusCode: 200,
       headers: { "Content-Type": "application/json; charset=utf-8" },
-      body: JSON.stringify(mockLambdas),
+      body: JSON.stringify([expectedFoo]),
     });
   });
 });
@@ -82,25 +112,9 @@ describe("failures", () => {
     jest.spyOn(console, "error").mockImplementationOnce(() => {});
     mockSend.mockRejectedValueOnce(new Error("Mock Error"));
     const res = await handler({} as APIGatewayProxyEventV2);
-    expect(mockSearch).toHaveBeenCalledWith({
-      QueryString: "resourcetype:lambda:function",
-    });
 
     expect(res).toEqual({
       statusCode: 500,
-    });
-  });
-  test("illegal char in filters", async () => {
-    const res = await handler({
-      queryStringParameters: { tags: "foo%3Dbar ;baz%3D" },
-    } as unknown as APIGatewayProxyEventV2);
-
-    expect(res).toEqual({
-      body: "Illegal char in filters",
-      headers: {
-        "Content-Type": "text/plain; charset=utf-8",
-      },
-      statusCode: 400,
     });
   });
 });
