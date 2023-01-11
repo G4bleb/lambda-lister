@@ -96,8 +96,16 @@ describe("successes", () => {
   });
 
   test("tag filter", async () => {
-    const res = await handler({
+    let res = await handler({
       queryStringParameters: { tags: "foo%3Dbar;baz%3D" },
+    } as unknown as APIGatewayProxyEventV2);
+    expect(res).toEqual({
+      statusCode: 200,
+      headers: { "Content-Type": "application/json; charset=utf-8" },
+      body: JSON.stringify([expectedFoo]),
+    });
+    res = await handler({
+      queryStringParameters: { tags: "foo%3Dbar" },
     } as unknown as APIGatewayProxyEventV2);
     expect(res).toEqual({
       statusCode: 200,
