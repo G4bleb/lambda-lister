@@ -43,7 +43,7 @@ $ terraform -chdir=terraform apply
 - `/list`
   - Returns all lambda functions on the AWS account where the app is hosted.
 - `/search?runtime=:a`
-  - Allows searching through the lambdas using the following filters (they can be combined):
+  - Allows searching through the lambdas using the following GET query string filters (they can be combined):
   - `/search?runtime=:a`
     - Returns all lambda functions on the AWS account which are based on the ':a' runtime
   - `/search?tags=:a=:b;:c=`
